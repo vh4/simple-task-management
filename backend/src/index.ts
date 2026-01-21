@@ -19,7 +19,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: "http://localhost:3001",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
 }));
 
@@ -53,7 +53,7 @@ const swaggerOpt = {
 const swaggerDocs = swaggerJsDoc(swaggerOpt);
 app.use("/v1/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-app.listen(3000, () => {
+app.listen(process.env.PORT || 3000, () => {
     console.log("Server is running on port 3000");
 });
 
