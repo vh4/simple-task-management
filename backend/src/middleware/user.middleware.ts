@@ -14,9 +14,10 @@ export const userMiddleware = (
     res: Response,
     next: NextFunction
 ) => {
-    const token = req.headers.authorization?.split(" ")[1];
+    const token = req.headers.authorization?.split(" ")[1] || req.cookies?.accessToken;
 
     if (!token) {
+        console.log("[AuthMiddleware] No token found in headers or cookies");
         return res.status(401).json({ error: "Unauthorized" });
     }
 
@@ -27,13 +28,15 @@ export const userMiddleware = (
         );
 
         if (typeof decoded === "string") {
+            console.log("[AuthMiddleware] Token decoded as string, expected object");
             return res.status(401).json({ error: "Invalid token payload" });
         }
 
         req.user = decoded;
 
         next();
-    } catch {
+    } catch (error) {
+        console.log("[AuthMiddleware] JWT Verification failed:", error instanceof Error ? error.message : "Invalid token");
         return res.status(401).json({ error: "Unauthorized" });
     }
 }; 

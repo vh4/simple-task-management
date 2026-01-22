@@ -1,5 +1,5 @@
 import express from "express";
-import { LoginController } from "../controllers/login.js";
+import { LoginController, refreshTokenController } from "../controllers/login.js";
 
 const router = express.Router();
 
@@ -43,5 +43,6 @@ const router = express.Router();
  *         description: User not found
  */
 router.post("/login", LoginController);
+router.post("/refresh-token", refreshTokenController);
 
 export default router;

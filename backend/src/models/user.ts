@@ -17,6 +17,7 @@ export const getUserByIdOrEmail = async (params: string): Promise<UserDto | null
             ],
         },
         select: {
+            id: true,
             name: true,
             email: true,
             password: true,

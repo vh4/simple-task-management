@@ -5,9 +5,21 @@ import type { TaskDto } from "../dto/tasks.dto.js";
 
 export const createTaskService = async (req: Request, res: Response): Promise<any> => {
     try {
-        const taskData: TaskDto = req.body;
+        const userId = (req.user as any)?.id;
 
-        const result: any = taskValidation.safeParse(taskData);
+        if (!userId) {
+            return res.status(401).json({
+                error: "Unauthorized",
+                message: "User ID not found in token"
+            });
+        }
+
+        const taskData = {
+            ...req.body,
+            createdById: userId,
+        };
+
+        const result = taskValidation.safeParse(req.body);
 
         if (!result.success) {
             return res.status(400).json({
@@ -15,7 +27,16 @@ export const createTaskService = async (req: Request, res: Response): Promise<an
             });
         }
 
-        const task = await createTask(result.data);
+        // Add internal fields that are not part of the public validation but required by the model
+        const finalTaskData: TaskDto = {
+            ...result.data,
+            deadline: result.data.deadline ? new Date(result.data.deadline) : undefined,
+            user_id: result.data.user_id || userId,
+            created_by: userId,
+            status: (result.data.status as any) || "PENDING"
+        };
+
+        const task = await createTask(finalTaskData);
         return res.status(201).json(task);
     } catch (error) {
         console.error("Error creating task:", error);
@@ -42,9 +63,9 @@ export const getTaskService = async (req: Request, res: Response): Promise<any> 
 export const updateTaskService = async (req: Request, res: Response): Promise<any> => {
     try {
         const taskId = req.params.id;
-        const taskData: TaskDto = req.body;
+        const userId = (req.user as any)?.id;
 
-        const result: any = taskValidation.safeParse(taskData);
+        const result = taskValidation.safeParse(req.body);
 
         if (!result.success) {
             return res.status(400).json({
@@ -52,7 +73,14 @@ export const updateTaskService = async (req: Request, res: Response): Promise<an
             });
         }
 
-        const task = await updateTask(taskId as string, result.data);
+        // Prepare data for update, ensuring dates are parsed
+        const updateData: any = {
+            ...result.data,
+            deadline: result.data.deadline ? new Date(result.data.deadline) : undefined,
+            status: result.data.status || undefined
+        };
+
+        const task = await updateTask(taskId as string, updateData);
 
         if (!task) {
             return res.status(404).json({
